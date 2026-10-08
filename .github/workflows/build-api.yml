@@ -110,12 +110,13 @@ jobs:
             --notes "$NOTES" \
             --latest 2>&1); then
               echo "Release created successfully: $RELEASE_OUTPUT"
+              echo "release_status=success" >> "$GITHUB_OUTPUT"
           else
-              echo "::error::GitHub Release failed: $RELEASE_OUTPUT"
+              echo "::warning::GitHub Release creation returned an error: $RELEASE_OUTPUT"
               echo "RELEASE_ERR_MSG<<EOF" >> "$GITHUB_ENV"
               echo "$RELEASE_OUTPUT" >> "$GITHUB_ENV"
               echo "EOF" >> "$GITHUB_ENV"
-              exit 1
+              echo "release_status=failed" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Report API download result
@@ -123,7 +124,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ "${{ steps.publish_release.outcome }}" = "success" ]; then
+          if [ "${{ steps.publish_release.outputs.release_status }}" = "success" ]; then
             RELEASE_TAG="api-build-${{ github.run_number }}-${{ github.run_attempt }}"
             gh release view "$RELEASE_TAG"
             echo "Release Tag: $RELEASE_TAG"
